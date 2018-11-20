@@ -3,7 +3,7 @@ PROJECT_ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 JSONNET_FMT := jsonnet fmt
 OUT_DIR := out
 
-.PHONY: $(OUT_DIR) all clean fmt lint
+.PHONY: $(OUT_DIR) all clean fmt lint rules.libsonnet alerts.jsonnet $(OUT_DIR)/prometheus_rules.yml $(OUT_DIR)/prometheus_alerts.yml
 
 all: fmt $(OUT_DIR) $(OUT_DIR)/prometheus_alerts.yml $(OUT_DIR)/prometheus_rules.yml lint alerts.libsonnet rules.libsonnet
 
