@@ -1,11 +1,11 @@
-PROMETHEUS_VERSION := v2.2.1
+PROMETHEUS_VERSION := v2.5.0
 PROJECT_ROOT := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 JSONNET_FMT := jsonnet fmt
 OUT_DIR := out
 
-.PHONY: $(OUT_DIR) all clean fmt lint rules.libsonnet alerts.jsonnet $(OUT_DIR)/prometheus_rules.yml $(OUT_DIR)/prometheus_alerts.yml
+.PHONY: $(OUT_DIR) all clean fmt lint alerts.libsonnet rules.libsonnet tests.libsonnet $(OUT_DIR)/prometheus_alerts.yml $(OUT_DIR)/prometheus_rules.yml prometheus_tests.yml
 
-all: fmt $(OUT_DIR) $(OUT_DIR)/prometheus_alerts.yml $(OUT_DIR)/prometheus_rules.yml lint alerts.libsonnet rules.libsonnet
+all: alerts.libsonnet rules.libsonnet fmt $(OUT_DIR) $(OUT_DIR)/prometheus_alerts.yml $(OUT_DIR)/prometheus_rules.yml prometheus_tests.yml lint
 
 fmt:
 	find . -name 'vendor' -prune -o -name '*.libsonnet' -print -o -name '*.jsonnet' -print | \
@@ -14,11 +14,14 @@ fmt:
 $(OUT_DIR):
 	mkdir -p $(OUT_DIR)
 
-$(OUT_DIR)/prometheus_alerts.yml: mixin.libsonnet lib/alerts.jsonnet alerts/**/*.libsonnet | $(OUT_DIR)
+$(OUT_DIR)/prometheus_alerts.yml: mixin.libsonnet lib/alerts.jsonnet alerts/**/*.libsonnet tests.libsonnet| $(OUT_DIR)
 	jsonnet -S lib/alerts.jsonnet > $@
 
-$(OUT_DIR)/prometheus_rules.yml: mixin.libsonnet lib/rules.jsonnet rules/**/*.libsonnet | $(OUT_DIR)
+$(OUT_DIR)/prometheus_rules.yml: mixin.libsonnet lib/rules.jsonnet rules/**/*.libsonnet tests.libsonnet| $(OUT_DIR)
 	jsonnet -S lib/rules.jsonnet > $@
+
+prometheus_tests.yml: mixin.libsonnet tests.libsonnet lib/alerts.jsonnet lib/rules.jsonnet
+	jsonnet -S lib/tests.jsonnet > $@
 
 alerts.libsonnet: alerts/**/*.libsonnet
 	jsonnet -S lib/generate_multiple_import.jsonnet --ext-str importFiles="$^" > alerts.libsonnet
@@ -26,7 +29,10 @@ alerts.libsonnet: alerts/**/*.libsonnet
 rules.libsonnet: rules/**/*.libsonnet
 	jsonnet -S lib/generate_multiple_import.jsonnet --ext-str importFiles="$^" > rules.libsonnet
 
-lint: alerts.libsonnet rules.libsonnet $(OUT_DIR)/prometheus_alerts.yml $(OUT_DIR)/prometheus_rules.yml
+tests.libsonnet: tests/**/**/*.libsonnet
+	jsonnet -S lib/generate_multiple_import.jsonnet --ext-str importFiles="$^" > tests.libsonnet
+
+lint: alerts.libsonnet rules.libsonnet tests.libsonnet $(OUT_DIR)/prometheus_alerts.yml $(OUT_DIR)/prometheus_rules.yml prometheus_tests.yml
 	find . -name 'vendor' -prune -o -name '*.libsonnet' -print -o -name '*.jsonnet' -print | \
 		while read f; do $(JSONNET_FMT) "$$f" | diff -u "$$f" -; \
 			if [ $$? -eq 1 ]; then \
@@ -37,6 +43,8 @@ lint: alerts.libsonnet rules.libsonnet $(OUT_DIR)/prometheus_alerts.yml $(OUT_DI
 
 	promtool check rules $(OUT_DIR)/prometheus_rules.yml
 	promtool check rules $(OUT_DIR)/prometheus_alerts.yml
+
+	promtool test rules prometheus_tests.yml
 
 	@echo "Generated prometheus_rules.yml:"
 	cat $(OUT_DIR)/prometheus_rules.yml
