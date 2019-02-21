@@ -1,0 +1,7 @@
+{
+  alertmanagerConfig+:: {
+    templates+: [
+      'templates/**/*.tmpl',
+    ],
+  },
+}
