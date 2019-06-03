@@ -16,7 +16,7 @@ docker run --rm rrreeeyyy/docker-prometheus-mixin amtool --version
 
 ### prometheus-rules
 
-Check format to all jsonnet/libsonnet and `promtool {check, test} rules` to generated `prometheus_{rules, alerts, tests}.yml`
+Check format to all jsonnet/libsonnet and `promtool {check,test} rules` to generated `prometheus_{rules,alerts,tests}.yml`
 
 ```
 docker run -it --rm -v "$(pwd)/example/prometheus-rules:/src/prometheus-rules" -w /src/prometheus-rules rrreeeyyy/docker-prometheus-mixin make lint
@@ -40,4 +40,16 @@ Check format to all jsonnet/libsonnet and `amtool check-config` to generated `al
 
 ```
 docker run -it --rm -v "$(pwd)/example/alertmanager-conf:/src/alertmanager-conf" -w /src/alertmanager-conf rrreeeyyy/docker-prometheus-mixin make lint
+```
+
+Generate `alertmanager.yml` from jsonnet/libsonnet
+
+```
+docker run -it --rm -v "$(pwd)/example/alertmanager-conf:/src/alertmanager-conf" -w /src/alertmanager-conf rrreeeyyy/docker-prometheus-mixin make lint
+```
+
+Check generated `alertmanager.yml`
+
+```
+cat $(pwd)/example/alertmanager-conf/out/alertmanager.yml
 ```
