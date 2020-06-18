@@ -15,4 +15,6 @@ WORKDIR /src
 
 RUN git clone https://github.com/google/jsonnet.git
 RUN cd jsonnet && make jsonnet
+RUN cd jsonnet && make jsonnetfmt
 RUN cp -a jsonnet/jsonnet /bin/jsonnet
+RUN cp -a jsonnet/jsonnetfmt /bin/jsonnetfmt
