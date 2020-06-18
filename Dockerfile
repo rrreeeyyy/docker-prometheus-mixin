@@ -1,5 +1,5 @@
-ARG PROMTOOL_VERSION=v2.5.0
-ARG AMTOOL_VERSION=v0.15.3
+ARG PROMTOOL_VERSION=v2.7.1
+ARG AMTOOL_VERSION=v0.17.0
 
 FROM prom/prometheus:"$PROMTOOL_VERSION" as prometheus
 FROM prom/alertmanager:"$AMTOOL_VERSION" as alertmanager
